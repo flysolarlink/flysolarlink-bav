@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlySolarLink — BAV Generator</title>
+<style>
+  :root {
+    --navy:  #0d1f3c;
+    --cyan:  #4dc8e8;
+    --blue:  #2a8fe0;
+    --lime:  #5ee832;
+    --warn:  #e85e32;
+    --ok:    #2ecc71;
+    --bg:    #f0f4f8;
+    --card:  #ffffff;
+    --text:  #1a2a3a;
+    --muted: #6b7fa8;
+    --border:#dde3ec;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Exo 2', 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--navy);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,.3);
+  }
+  .logo { font-size: 22px; font-weight: 800; color: var(--cyan); letter-spacing: 1px; }
+  .logo span { color: white; font-weight: 400; font-size: 13px; display: block; }
+  .badge {
+    margin-left: auto;
+    background: var(--cyan);
+    color: var(--navy);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  /* LAYOUT */
+  .container { max-width: 900px; margin: 0 auto; padding: 28px 16px 60px; }
+
+  /* SECTION TITLES */
+  .section-title {
+    background: var(--navy);
+    color: white;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 8px 14px;
+    border-radius: 6px 6px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title .icon { font-size: 16px; }
+
+  /* CARDS */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 0 0 8px 8px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .card-body { padding: 18px; }
+
+  /* FORM GRID */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  @media(max-width:600px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 5px;
+  }
+  input, select, textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    color: var(--text);
+    background: #f8fafc;
+    transition: border-color .2s;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--cyan);
+    background: white;
+  }
+  textarea { resize: vertical; min-height: 60px; }
+
+  /* STEPS */
+  .steps {
+    display: flex;
+    gap: 0;
+    margin-bottom: 28px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .step {
+    flex: 1;
+    padding: 12px 8px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    border-right: 1px solid var(--border);
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .step:last-child { border-right: none; }
+  .step.active { background: var(--navy); color: white; }
+  .step.done   { background: var(--ok);  color: white; }
+  .step .step-num {
+    display: block;
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 2px;
+  }
+
+  /* PANELS */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* BUTTONS */
+  .btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all .2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-primary {
+    background: var(--cyan);
+    color: var(--navy);
+  }
+  .btn-primary:hover { background: #3ab6d4; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-navy {
+    background: var(--navy);
+    color: white;
+  }
+  .btn-navy:hover { background: #162d52; }
+  .btn-ok {
+    background: var(--ok);
+    color: white;
+  }
+  .btn-warn {
+    background: var(--warn);
+    color: white;
+  }
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  /* STATUS ITEMS */
+  .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media(max-width:600px) { .status-grid { grid-template-columns: 1fr; } }
+
+  .status-item {
+    background: #f8fafc;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    position: relative;
+  }
+  .status-item .status-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .status-item .status-value {
+    font-size: 13px;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+  .status-item.ok    { border-color: var(--ok);   background: #edfff4; }
+  .status-item.warn  { border-color: var(--warn);  background: #fff3f0; }
+  .status-item.info  { border-color: var(--cyan);  background: #eaf8fd; }
+  .status-item.loading { opacity: .6; }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+  }
+  .dot-ok   { background: var(--ok); }
+  .dot-warn { background: var(--warn); }
+  .dot-info { background: var(--cyan); }
+  .dot-grey { background: #aaa; }
+
+  /* ZONES TABLE */
+  .zones-list { margin-top: 10px; }
+  .zone-item {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: #f8fafc;
+  }
+  .zone-item.warn { border-color: var(--warn); background: #fff3f0; }
+  .zone-item.ok   { border-color: var(--ok);   background: #edfff4; }
+  .zone-name {
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .zone-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: var(--navy);
+    color: white;
+  }
+  .zone-badge.active { background: var(--warn); }
+  .zone-badge.inactive { background: #aaa; }
+  .zone-detail { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+  /* PIEGE ALERT */
+  .piege {
+    background: #fff8e1;
+    border: 1.5px solid #e6a817;
+    border-radius: 8px;
+    padding: 14px;
+    margin-top: 10px;
+    font-size: 13px;
+  }
+  .piege strong { color: #8a5e00; }
+
+  /* LOADING SPINNER */
+  .spinner {
+    display: inline-block;
+    width: 18px; height: 18px;
+    border: 2.5px solid rgba(77,200,232,.3);
+    border-top-color: var(--cyan);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* FINAL SUMMARY */
+  .summary-box {
+    background: var(--navy);
+    color: white;
+    border-radius: 10px;
+    padding: 22px;
+    margin-bottom: 20px;
+  }
+  .summary-box h3 { color: var(--cyan); font-size: 16px; margin-bottom: 14px; }
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(255,255,255,.1);
+    font-size: 13px;
+  }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-row .key { color: rgba(255,255,255,.6); }
+  .summary-row .val { font-weight: 600; }
+  .val.ok   { color: var(--lime); }
+  .val.warn { color: var(--warn); }
+
+  /* BIG GENERATE BUTTON */
+  .generate-zone {
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(135deg, var(--navy) 0%, #1a3a6c 100%);
+    border-radius: 10px;
+    margin-top: 10px;
+  }
+  .generate-zone p { color: rgba(255,255,255,.7); font-size: 13px; margin-top: 10px; }
+
+  .code-block {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    background: #1a2a3a;
+    color: var(--cyan);
+    padding: 12px;
+    border-radius: 6px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    margin-top: 6px;
+  }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header>
+  <div class="logo">FlySolarLink <span>BAV Generator v1.0</span></div>
+  <div class="badge">🇧🇪 Belgique · EU 2019/947</div>
+</header>
+
+<div class="container">
+
+  <!-- STEPS -->
+  <div class="steps">
+    <div class="step active" id="step1" onclick="goStep(1)">
+      <span class="step-num">1</span>Mission
+    </div>
+    <div class="step" id="step2" onclick="goStep(2)">
+      <span class="step-num">2</span>Géozones
+    </div>
+    <div class="step" id="step3" onclick="goStep(3)">
+      <span class="step-num">3</span>Météo & KP
+    </div>
+    <div class="step" id="step4" onclick="goStep(4)">
+      <span class="step-num">4</span>Générer PDF
+    </div>
+  </div>
+
+  <!-- ── PANEL 1 : MISSION ── -->
+  <div class="panel active" id="panel1">
+
+    <div class="section-title"><span class="icon">✈️</span> Informations de mission</div>
+    <div class="card"><div class="card-body">
+      <div class="grid-2">
+        <div>
+          <label>Date du vol</label>
+          <input type="date" id="date_vol" required>
+        </div>
+        <div>
+          <label>Heure de vol (locale)</label>
+          <input type="time" id="heure_vol" value="15:30">
+        </div>
+      </div>
+      <br>
+      <div>
+        <label>Objectif des opérations</label>
+        <input type="text" id="objectif" value="Entraînement au pilotage avec instructeur" placeholder="Ex: Inspection thermique, écolage...">
+      </div>
+      <br>
+      <div>
+        <label>Drone utilisé</label>
+        <select id="drone">
+          {% for key, info in drones.items() %}
+          <option value="{{ key }}">{{ info.nom }} — Classe {{ info.classe }} — {{ info.mtow }}g</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div></div>
+
+    <div class="section-title"><span class="icon">📍</span> Zone géographique</div>
+    <div class="card"><div class="card-body">
+      <div>
+        <label>Nom du lieu</label>
+        <input type="text" id="lieu" placeholder="Ex: CHC Mont Légia, Lac de Butgenbach..." required>
+      </div>
+      <br>
+      <div>
+        <label>Adresse complète</label>
+        <input type="text" id="adresse" placeholder="Ex: Rue de Bois Saint-Jean 56, 4102 Seraing">
+      </div>
+      <br>
+      <div class="grid-3">
+        <div>
+          <label>Latitude (décimal)</label>
+          <input type="number" id="lat" step="0.0001" placeholder="50.5891" required>
+        </div>
+        <div>
+          <label>Longitude (décimal)</label>
+          <input type="number" id="lon" step="0.0001" placeholder="5.5320" required>
+        </div>
+        <div>
+          <label>Ville IRM météo</label>
+          <input type="text" id="ville_irm" placeholder="liege" value="liege">
+        </div>
+      </div>
+      <br>
+      <div>
+        <label>Instructeur présent ?</label>
+        <select id="instructeur">
+          <option value="oui">OUI — Instructeur École du Drone présent</option>
+          <option value="non">NON — Vol solo</option>
+        </select>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="goStep(2)">
+          Étape suivante → Géozones
+        </button>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ── PANEL 2 : GÉOZONES ── -->
+  <div class="panel" id="panel2">
+
+    <div class="section-title"><span class="icon">🗺️</span> Analyse géozones — skeyes Public API</div>
+    <div class="card"><div class="card-body">
+
+      <div id="geo-loading" style="text-align:center; padding:20px; display:none;">
+        <span class="spinner"></span> Interrogation de l'API skeyes en cours...
+      </div>
+
+      <div id="geo-results" style="display:none;">
+        <div class="status-grid" id="geo-summary"></div>
+        <div class="zones-list" id="zones-list"></div>
+        <div id="geo-piege"></div>
+        <div id="geo-aip-reminder" class="piege" style="margin-top:10px;">
+          <strong>📋 Vérification AIP obligatoire en complément :</strong><br>
+          <b>① ops.skeyes.be ENR 5.1</b> → zones militaires (EBD29 etc.) activées sur NOTAM uniquement<br>
+          <b>② ops.skeyes.be ENR 5.2</b> → horaires aérodromes non contrôlés (EBBN, ULIP Feuervogel…)<br>
+          <b>③ skeyes.be → NOTAMs</b> → vérifier le matin du vol<br>
+          <b>④ daa.skeyes.be</b> → notification DAA si VLL2 détectée
+        </div>
+      </div>
+
+      <div id="geo-fallback" style="display:none;">
+        <div class="piege">
+          <strong>⚠ API skeyes non accessible depuis cette session.</strong><br>
+          Vérifier manuellement sur <a href="https://map.droneguide.be" target="_blank">map.droneguide.be</a> et renseigner ci-dessous.
+        </div>
+        <br>
+        <div>
+          <label>Observations manuelles géozones (copie depuis droneguide)</label>
+          <textarea id="geo_manual" rows="5" placeholder="Ex: EBLG VLL2 — 0 ft → 1051 ft AMSL — DAA 3h avant&#10;EBCH héliport — 0 ft → 4500 ft AMSL — autorisation 5 jours ouvrables..."></textarea>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-navy" onclick="loadGeozones()">
+          🔄 Actualiser géozones
+        </button>
+        <button class="btn btn-primary" onclick="goStep(3)">
+          Étape suivante → Météo
+        </button>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ── PANEL 3 : MÉTÉO & KP ── -->
+  <div class="panel" id="panel3">
+
+    <div class="section-title"><span class="icon">🌤️</span> Météo — IRM + METAR/TAF EBLG</div>
+    <div class="card"><div class="card-body">
+      <div id="meteo-loading" style="text-align:center; padding:20px; display:none;">
+        <span class="spinner"></span> Récupération IRM + allmetsat.com...
+      </div>
+      <div id="meteo-results" style="display:none;">
+        <div class="status-grid" id="meteo-summary"></div>
+        <br>
+        <div>
+          <label>Bulletin IRM</label>
+          <div id="irm-bulletin" class="status-item info"></div>
+        </div>
+        <br>
+        <div class="grid-2">
+          <div>
+            <label>METAR EBLG</label>
+            <div class="code-block" id="metar-display">-</div>
+          </div>
+          <div>
+            <label>TAF EBLG</label>
+            <div class="code-block" id="taf-display">-</div>
+          </div>
+        </div>
+      </div>
+      <div id="meteo-fallback" style="display:none;">
+        <div class="piege"><strong>⚠ Données météo non disponibles.</strong><br>
+          Consulter <a href="https://www.meteo.be" target="_blank">meteo.be</a> et
+          <a href="https://fr.allmetsat.com/metar-taf/pays-bas-belgique-luxembourg.php?icao=EBLG" target="_blank">allmetsat.com EBLG</a>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-navy" onclick="loadMeteo()">🔄 Actualiser météo</button>
+      </div>
+    </div></div>
+
+    <div class="section-title"><span class="icon">🛰️</span> Indice KP — NOAA SWPC</div>
+    <div class="card"><div class="card-body">
+      <div id="kp-loading" style="text-align:center; padding:20px; display:none;">
+        <span class="spinner"></span> Récupération NOAA SWPC...
+      </div>
+      <div id="kp-results" style="display:none;">
+        <div class="status-grid" id="kp-summary"></div>
+        <div class="zones-list" id="kp-table" style="margin-top:12px;"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-navy" onclick="loadKP()">🔄 Actualiser KP</button>
+        <button class="btn btn-primary" onclick="goStep(4)">Étape suivante → Générer</button>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ── PANEL 4 : GÉNÉRER PDF ── -->
+  <div class="panel" id="panel4">
+
+    <div class="section-title"><span class="icon">📄</span> Récapitulatif & Génération BAV</div>
+    <div class="card"><div class="card-body">
+
+      <div class="summary-box" id="summary-box">
+        <h3>📋 Récapitulatif de la mission</h3>
+        <div id="summary-content">Chargement...</div>
+      </div>
+
+      <div class="generate-zone">
+        <button class="btn btn-primary" style="font-size:16px; padding:16px 40px;"
+                onclick="generatePDF()" id="btn-generate">
+          📥 Générer le BAV PDF
+        </button>
+        <p>Toutes les données collectées seront compilées dans le PDF.</p>
+      </div>
+
+      <div id="pdf-loading" style="text-align:center; padding:20px; display:none;">
+        <span class="spinner"></span> Génération du PDF en cours...
+      </div>
+      <div id="pdf-success" style="display:none;">
+        <div class="status-item ok" style="margin-top:16px; text-align:center;">
+          <strong>✅ BAV généré avec succès !</strong><br>
+          Votre fichier PDF a été téléchargé automatiquement.
+        </div>
+      </div>
+      <div id="pdf-error" style="display:none;">
+        <div class="status-item warn" style="margin-top:16px;">
+          <strong>⚠ Erreur lors de la génération</strong><br>
+          <span id="pdf-error-msg"></span>
+        </div>
+      </div>
+
+    </div></div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+// ── STATE ─────────────────────────────────────────────────
+const state = {
+  step: 1,
+  meteo: null,
+  kp: null,
+  zones: null,
+  analyse: null,
+};
+
+// ── NAVIGATION ────────────────────────────────────────────
+function goStep(n) {
+  state.step = n;
+  document.querySelectorAll(".panel").forEach((p,i) => {
+    p.classList.toggle("active", i+1 === n);
+  });
+  document.querySelectorAll(".step").forEach((s,i) => {
+    s.classList.remove("active","done");
+    if (i+1 < n) s.classList.add("done");
+    if (i+1 === n) s.classList.add("active");
+  });
+  // Auto-load on step enter
+  if (n === 2) loadGeozones();
+  if (n === 3) { loadMeteo(); loadKP(); }
+  if (n === 4) buildSummary();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+// ── GÉOZONES ─────────────────────────────────────────────
+async function loadGeozones() {
+  const lat = parseFloat(document.getElementById("lat").value);
+  const lon = parseFloat(document.getElementById("lon").value);
+  const dateVal = document.getElementById("date_vol").value;
+  const heureVal = document.getElementById("heure_vol").value;
+  if (!lat || !lon) { alert("Entrez les coordonnées GPS d'abord !"); return; }
+
+  document.getElementById("geo-loading").style.display = "block";
+  document.getElementById("geo-results").style.display = "none";
+  document.getElementById("geo-fallback").style.display = "none";
+
+  let vol_datetime = null;
+  if (dateVal && heureVal) {
+    vol_datetime = `${dateVal}T${heureVal}:00Z`;
+  }
+
+  try {
+    const resp = await fetch("/api/geozones", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({lat, lon, vol_datetime})
+    });
+    const data = await resp.json();
+    document.getElementById("geo-loading").style.display = "none";
+
+    if (data.ok) {
+      state.zones   = data.zones;
+      state.analyse = data.analyse;
+      renderGeozones(data.zones, data.analyse);
+      document.getElementById("geo-results").style.display = "block";
+    } else {
+      document.getElementById("geo-fallback").style.display = "block";
+    }
+  } catch(e) {
+    document.getElementById("geo-loading").style.display = "none";
+    document.getElementById("geo-fallback").style.display = "block";
+  }
+}
+
+function renderGeozones(zones, analyse) {
+  const summary = document.getElementById("geo-summary");
+  const list    = document.getElementById("zones-list");
+  const piege   = document.getElementById("geo-piege");
+
+  // Summary items
+  const delai  = analyse.delai_max_jours;
+  const nbAct  = analyse.zones_actives.length;
+  const altMax = analyse.altitude_max_m;
+
+  summary.innerHTML = `
+    <div class="status-item ${nbAct>0?'warn':'ok'}">
+      <div class="status-label">Zones actives</div>
+      <div class="status-value">
+        <span class="status-dot ${nbAct>0?'dot-warn':'dot-ok'}"></span>
+        ${analyse.nb_zones} zone(s) détectée(s) — ${nbAct} active(s)
+      </div>
+    </div>
+    <div class="status-item ${delai>=5?'warn':delai>0?'info':'ok'}">
+      <div class="status-label">Délai autorisation</div>
+      <div class="status-value">
+        <span class="status-dot ${delai>=5?'dot-warn':delai>0?'dot-info':'dot-ok'}"></span>
+        ${delai >= 5 ? `⚠ ${delai} jours ouvrables requis` :
+          delai > 0  ? `${delai} jours ouvrables requis` :
+          '✔ Pas de délai spécifique détecté'}
+      </div>
+    </div>
+    <div class="status-item ${analyse.daa_requis?'info':'ok'}">
+      <div class="status-label">Notification DAA</div>
+      <div class="status-value">
+        <span class="status-dot ${analyse.daa_requis?'dot-info':'dot-ok'}"></span>
+        ${analyse.daa_requis ? '⚠ Notification DAA requise ≥3h avant' : '✔ Non requise a priori'}
+      </div>
+    </div>
+    <div class="status-item ${altMax&&altMax<120?'warn':'ok'}">
+      <div class="status-label">Altitude max</div>
+      <div class="status-value">
+        <span class="status-dot ${altMax&&altMax<120?'dot-warn':'dot-ok'}"></span>
+        ${altMax ? `⚠ Limite spécifique : ${altMax} m AGL` : '✔ Limite standard (120 m AGL)'}
+      </div>
+    </div>
+  `;
+
+  // Zone list
+  const allZones = [...analyse.zones_actives, ...analyse.zones_bientot, ...analyse.zones_inactives];
+  list.innerHTML = allZones.length === 0
+    ? '<div class="zone-item ok"><div class="zone-name">✔ Aucune géozone restrictive détectée dans le rayon de 5 km</div></div>'
+    : allZones.map(z => {
+      const isWarn = z.delai_j >= 5 || z.status === "ACTIVE";
+      const contacts = z.contacts.map(c =>
+        `${c.nom||''} ${c.email ? `<a href="mailto:${c.email}">${c.email}</a>` : ''} ${c.tel||''}`.trim()
+      ).join(" | ");
+      return `<div class="zone-item ${isWarn?'warn':''}">
+        <div class="zone-name">
+          ${z.nom}
+          <span class="zone-badge ${z.status==='ACTIVE'?'active':z.status==='INACTIVE'?'inactive':''}">${z.status}</span>
+          ${z.delai_j ? `<span class="zone-badge" style="background:var(--warn)">⏱ ${z.delai_j}j ouvrables</span>` : ''}
+        </div>
+        <div class="zone-detail">Restriction : ${z.restriction}</div>
+        ${z.conditions.length ? `<div class="zone-detail">Conditions : ${z.conditions.slice(0,3).join(" • ")}</div>` : ''}
+        ${contacts ? `<div class="zone-detail">Contact : ${contacts}</div>` : ''}
+      </div>`;
+  }).join("");
+
+  // Alerte pièges
+  piege.innerHTML = "";
+  if (delai >= 5) {
+    piege.innerHTML = `<div class="piege">
+      <strong>⚠ PIÈGE RÉGLEMENTAIRE — Délai ${delai} jours ouvrables !</strong><br>
+      Une autorisation écrite préalable est obligatoire. Calcule ta date limite en comptant
+      les jours <b>ouvrables</b> (lundi–vendredi, hors jours fériés) à rebours depuis la date du vol.
+      Sans confirmation écrite = vol illégal !
+    </div>`;
+  }
+  if (altMax && altMax < 120) {
+    piege.innerHTML += `<div class="piege" style="margin-top:8px;">
+      <strong>⚠ PIÈGE ALTITUDE — ${altMax} m AGL max dans cette zone !</strong><br>
+      La limite Open A2 standard de 120 m NE S'APPLIQUE PAS ici.
+      Programmer la limite dans l'appli DJI avant le vol.
+    </div>`;
+  }
+}
+
+// ── MÉTÉO ─────────────────────────────────────────────────
+async function loadMeteo() {
+  const ville = document.getElementById("ville_irm").value || "liege";
+  document.getElementById("meteo-loading").style.display = "block";
+  document.getElementById("meteo-results").style.display = "none";
+  document.getElementById("meteo-fallback").style.display = "none";
+  try {
+    const resp = await fetch("/api/meteo", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ville})
+    });
+    const data = await resp.json();
+    document.getElementById("meteo-loading").style.display = "none";
+    if (data.ok) {
+      state.meteo = data;
+      document.getElementById("irm-bulletin").textContent = data.bulletin || "-";
+      document.getElementById("metar-display").textContent = data.metar || "-";
+      document.getElementById("taf-display").textContent   = data.taf   || "-";
+
+      // Warnings météo
+      const taf = (data.taf||"").toUpperCase();
+      const hasCB   = taf.includes("CB");
+      const hasSHRA = taf.includes("SHRA");
+      const hasTSRA = taf.includes("TSRA");
+      document.getElementById("meteo-summary").innerHTML = `
+        <div class="status-item ${hasTSRA?'warn':hasCB?'warn':'ok'}">
+          <div class="status-label">Orages / CB</div>
+          <div class="status-value">
+            <span class="status-dot ${hasTSRA||hasCB?'dot-warn':'dot-ok'}"></span>
+            ${hasTSRA ? '⚠ Orages détectés dans le TAF !' :
+              hasCB   ? '⚠ Cumulo-nimbus dans le TAF' :
+              '✔ Pas de CB/orage dans le TAF'}
+          </div>
+        </div>
+        <div class="status-item ${hasSHRA?'info':'ok'}">
+          <div class="status-label">Averses</div>
+          <div class="status-value">
+            <span class="status-dot ${hasSHRA?'dot-info':'dot-ok'}"></span>
+            ${hasSHRA ? 'ℹ Averses (SHRA) possibles' : '✔ Pas d\'averses dans le TAF'}
+          </div>
+        </div>
+      `;
+      document.getElementById("meteo-results").style.display = "block";
+    } else {
+      document.getElementById("meteo-fallback").style.display = "block";
+    }
+  } catch(e) {
+    document.getElementById("meteo-loading").style.display = "none";
+    document.getElementById("meteo-fallback").style.display = "block";
+  }
+}
+
+// ── KP ────────────────────────────────────────────────────
+async function loadKP() {
+  document.getElementById("kp-loading").style.display = "block";
+  document.getElementById("kp-results").style.display = "none";
+  try {
+    const resp = await fetch("/api/kp");
+    const data = await resp.json();
+    document.getElementById("kp-loading").style.display = "none";
+    if (data.ok) {
+      state.kp = data;
+      const isOk = data.max_kp < 4;
+      document.getElementById("kp-summary").innerHTML = `
+        <div class="status-item ${isOk?'ok':'warn'}">
+          <div class="status-label">KP Maximum prévu</div>
+          <div class="status-value">
+            <span class="status-dot ${isOk?'dot-ok':'dot-warn'}"></span>
+            <strong>${data.max_kp}</strong> — ${data.niveau}
+          </div>
+        </div>
+        <div class="status-item info">
+          <div class="status-label">Source</div>
+          <div class="status-value">NOAA SWPC<br>${data.issued || ''}</div>
+        </div>
+      `;
+      // Table KP par créneau
+      const slots = Object.entries(data.kp_today||{}).slice(0,8);
+      document.getElementById("kp-table").innerHTML = slots.map(([slot, val]) => {
+        const kp = parseFloat(val);
+        const color = kp >= 5 ? "warn" : kp >= 3 ? "info" : "";
+        return `<div class="zone-item ${color}" style="padding:8px 12px; margin-bottom:4px; display:flex; justify-content:space-between;">
+          <span style="font-size:12px; color:var(--muted);">${slot} UTC</span>
+          <strong>KP ${val}</strong>
+        </div>`;
+      }).join("") || "<div class='zone-item'>Données non disponibles</div>";
+      document.getElementById("kp-results").style.display = "block";
+    }
+  } catch(e) {
+    document.getElementById("kp-loading").style.display = "none";
+  }
+}
+
+// ── SUMMARY ───────────────────────────────────────────────
+function buildSummary() {
+  const date  = document.getElementById("date_vol").value;
+  const heure = document.getElementById("heure_vol").value;
+  const lieu  = document.getElementById("lieu").value;
+  const drone = document.getElementById("drone");
+  const droneTxt = drone.options[drone.selectedIndex]?.text || "";
+  const analyse = state.analyse || {};
+  const kp = state.kp || {};
+  const meteo = state.meteo || {};
+
+  const rows = [
+    ["Date / Heure",   `${date} — ${heure}`,    ""],
+    ["Lieu",           lieu,                     ""],
+    ["Drone",          droneTxt,                 ""],
+    ["Géozones",       `${analyse.nb_zones||0} zone(s) — ${analyse.zones_actives?.length||0} active(s)`,
+                       analyse.delai_max_jours >= 5 ? "warn" : "ok"],
+    ["Autorisation",   analyse.delai_max_jours >= 5
+                       ? `⚠ Délai ${analyse.delai_max_jours}j ouvrables`
+                       : "✔ OK / non requise",
+                       analyse.delai_max_jours >= 5 ? "warn" : "ok"],
+    ["Altitude max",   analyse.altitude_max_m ? `⚠ ${analyse.altitude_max_m} m AGL` : "✔ 120 m (standard)",
+                       analyse.altitude_max_m ? "warn" : "ok"],
+    ["DAA requis",     analyse.daa_requis ? "⚠ Oui — notification ≥3h avant" : "✔ Non requis",
+                       analyse.daa_requis ? "warn" : "ok"],
+    ["Météo CB/orage", meteo.taf?.includes("TSRA") ? "⚠ Orages dans TAF" :
+                       meteo.taf?.includes("CB")   ? "⚠ CB dans TAF"    : "✔ OK",
+                       meteo.taf?.includes("TSRA") || meteo.taf?.includes("CB") ? "warn" : "ok"],
+    ["KP Max",         kp.max_kp != null ? `${kp.max_kp} — ${kp.niveau}` : "À vérifier",
+                       kp.max_kp >= 4 ? "warn" : "ok"],
+  ];
+
+  document.getElementById("summary-content").innerHTML = rows.map(([k, v, cls]) =>
+    `<div class="summary-row">
+      <span class="key">${k}</span>
+      <span class="val ${cls}">${v}</span>
+    </div>`
+  ).join("");
+}
+
+// ── GENERATE PDF ──────────────────────────────────────────
+async function generatePDF() {
+  document.getElementById("btn-generate").disabled = true;
+  document.getElementById("pdf-loading").style.display = "block";
+  document.getElementById("pdf-success").style.display = "none";
+  document.getElementById("pdf-error").style.display   = "none";
+
+  const payload = {
+    date_vol:    document.getElementById("date_vol").value,
+    heure_vol:   document.getElementById("heure_vol").value,
+    lieu:        document.getElementById("lieu").value,
+    adresse:     document.getElementById("adresse").value,
+    coords:      `Lat: ${document.getElementById("lat").value} / Lon: ${document.getElementById("lon").value}`,
+    objectif:    document.getElementById("objectif").value,
+    drone:       document.getElementById("drone").value,
+    instructeur: document.getElementById("instructeur").value === "oui",
+    meteo:       state.meteo  || {},
+    kp:          state.kp     || {},
+    zones:       { ok: !!state.zones, zones: state.zones || [] },
+    analyse:     state.analyse || {},
+  };
+
+  try {
+    const resp = await fetch("/api/generate_pdf", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
+    });
+    if (resp.ok) {
+      const blob = await resp.blob();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href     = url;
+      a.download = `BAV_FlySolarLink_${payload.lieu.replace(/\s/g,"_")}_${payload.date_vol.replace(/-/g,"")}.pdf`;
+      a.click();
+      document.getElementById("pdf-loading").style.display = "none";
+      document.getElementById("pdf-success").style.display = "block";
+    } else {
+      const err = await resp.json();
+      throw new Error(err.error || "Erreur serveur");
+    }
+  } catch(e) {
+    document.getElementById("pdf-loading").style.display = "none";
+    document.getElementById("pdf-error").style.display   = "block";
+    document.getElementById("pdf-error-msg").textContent  = e.message;
+  }
+  document.getElementById("btn-generate").disabled = false;
+}
+
+// ── INIT ─────────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", () => {
+  // Date par défaut = demain
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  document.getElementById("date_vol").value = tomorrow.toISOString().split("T")[0];
+});
+</script>
+</body>
+</html>
